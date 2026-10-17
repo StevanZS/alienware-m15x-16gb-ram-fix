@@ -76,3 +76,7 @@ The boot block is untouched, so Phoenix crisis recovery should remain available.
 ## Related
 
 The M17x R1 has the same symptom. Its BIOS (A07) has not been looked at yet.
+
+## License
+
+The patch script and documentation are [MIT](LICENSE) licensed. Dell/Phoenix firmware is not covered and remains its owners' property.
