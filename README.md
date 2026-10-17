@@ -115,10 +115,6 @@ and per Dell's notes, ME/GbE update support only arrived in **A02**. The working
 The EC flasher switches the laptop off when it finishes, which is normal. `/c` clears CMOS, so set the
 date and time again afterwards.
 
-## Related
-
-The Alienware M17x R2 (BIOS A10) has the same bug; a separate fix, also tested on hardware, is in progress.
-
 ## License
 
 The patch script and documentation are [MIT](LICENSE) licensed. Dell/Phoenix firmware is not covered and remains its owners' property.
