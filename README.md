@@ -75,7 +75,7 @@ The boot block is untouched, so Phoenix crisis recovery should remain available.
 
 ## Related
 
-The M17x R1 has the same symptom. Its BIOS (A07) has not been looked at yet.
+The Alienware M17x R2 (BIOS A10) has the same bug, and a separate fix is in progress.
 
 ## License
 

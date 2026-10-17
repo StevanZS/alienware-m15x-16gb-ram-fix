@@ -4,7 +4,7 @@
 *.bin
 *.zip
 M15x-BIOS/
-M17x-BIOS/
+M17x-R2-BIOS/
 out/
 .DS_Store
 __pycache__/
