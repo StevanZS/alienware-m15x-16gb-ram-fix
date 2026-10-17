@@ -1,15 +1,16 @@
 # Alienware M15x: 16GB RAM display fix (BIOS A09)
 
 With two 8GB DDR3/DDR3L SO-DIMMs installed (16GB), the Alienware M15x **works fine in the OS**, but
-the BIOS Setup Main page shows nothing useful for **Memory Bank 0**, **Memory Bank 1** and
-**Total Memory**, and **Memory Channel Mode** shows *Single* instead of *Dual*.
+the BIOS Setup Main page shows **Total Memory 0 MB, Memory Bank 0 0 MB, Memory Bank 1 0 MB**, and
+*Advanced → Performance Options* shows **Memory Channel Mode: Single** instead of *Dual*.
 
 This project patches Dell's latest M15x BIOS (**A09**) so Setup shows `8192 MB` / `8192 MB` /
 `16384 MB` and *Dual*. Nothing else changes.
 
-> **Status:** the patch has been verified off-hardware: module checksums, exact recompression and CPU
-> emulation of the new code. It has **not yet been flashed and tested on a real M15x**. Flashing a BIOS
-> always carries risk. Proceed at your own risk.
+> **Status:** ✅ **tested on real hardware.** An M15x (i7-720QM, 2×8GB Samsung DDR3L-1600 running at
+> DDR3-1333) flashed with the patched A09 shows Total Memory 16384 MB, Memory Bank 0/1 8192 MB, Memory
+> Channel Mode *Dual* and Memory Frequency 1333 MHz. Flashing a BIOS always carries some risk. Proceed
+> at your own risk.
 
 ## Root cause
 
@@ -67,15 +68,56 @@ below into `out/`. Compare them against [`SHA256SUMS.txt`](SHA256SUMS.txt); they
 | File | Use |
 |---|---|
 | `M15xA09-16GB.iso` | Bootable. Booting it auto-runs Dell's `FA.bat`, exactly like the original ISO: full flash with `phlash16 /all`, then the EC flash. |
-| `W6702M.A09` | phlash16 file. For a BIOS-only flash from your own DOS boot media: `phlash16 W6702M.A09 /mode=3 /bbl /c /s /exit` (Dell's `F.BAT`). |
+| `W6702M.A09` | phlash16 file. For a BIOS-only flash from your own DOS boot media (see below). |
 | `W6702MB.A09` | Raw 2MB SPI image, for an external programmer. |
 
-Flash on AC power with a charged battery and don't interrupt the flash. Keep the original Dell ISO.
-The boot block is untouched, so Phoenix crisis recovery should remain available.
+### Flashing (tested procedure)
+
+**Your laptop must already run stock A09 / EC 1.18**; Setup's Main page shows both. If it's on an
+older BIOS, update it first; see the next section. Boot a plain DOS USB stick (for example FreeDOS
+made with Rufus) holding Dell's `PHLASH16.EXE`, Dell's original `W6702M.A09` and the patched
+`W6702M.A09` in separate folders.
+
+```
+REM 1) back up the BIOS region (reads only; phlash16 needs an image argument, so give it Dell's original)
+cd \STOCK
+phlash16 W6702M.A09 /mode=3 /RO=A09BAK.ROM /s /exit
+REM 2) flash the patched BIOS region: no /all, no /bbl
+cd \PATCHED
+phlash16 W6702M.A09 /mode=3 /s /v /exit
+```
+
+Copy `A09BAK.ROM` to another computer before step 2. The boot block in the patched image is
+identical to Dell's, so leaving out `/bbl` loses nothing and keeps Phoenix crisis recovery untouched.
+Flash on AC power with a charged battery, and don't interrupt the flash.
+
+## Updating an early M15x (A00/A01) to A09
+
+Dell's A09 can't be flashed directly onto A01. Its `phlash16 /all` fails with **"Undefined error
+number -8953"**, before anything is erased. A09 also updates the Intel ME firmware (V1126 → V1185),
+and per Dell's notes, ME/GbE update support only arrived in **A02**. The working path is
+**A01 → A02 → A08 → A09**:
+
+1. **A02** (`M15xA02.iso`, MD5 `78e5b8562c9edea768eb9c6b4a2d6adb`): its `FA.BAT` has a bug; it calls
+   `W6702.A02`, but the file is `W6702M.A02`, so the BIOS step fails and the EC step still runs.
+   Run the commands by hand instead:
+   `phlash16 W6702M.A02 /mode=3 /bbl /c /s /exit`, then `dflash EC_W670.096`. That gives BIOS A02 and
+   EC 0.96.
+2. **A08** (`M15xA08.exe`, run in Windows): it builds a bootable USB stick, whose `AUTOEXEC.BAT`
+   flashes A02 first if needed, else A08. Its script also flashes the EC even if the BIOS flash
+   failed, so it's safer to run it by hand:
+   `cd \A08`, `phlash16 W6702M.A08 /all /mode=3 /bbl /c /s /exit /mfg`, and only if that succeeds,
+   `rpg` and `dflash EC_W670.116`. That gives BIOS A08, EC 1.16 and ME V1185.
+3. **A09** from Dell's ISO files, by hand:
+   `phlash16 W6702M.A09 /all /mode=3 /bbl /c /s /exit`, then `rpg` and `dflash EC_W670.118`. That
+   gives BIOS A09 and EC 1.18.
+
+The EC flasher switches the laptop off when it finishes, which is normal. `/c` clears CMOS, so set the
+date and time again afterwards.
 
 ## Related
 
-The Alienware M17x R2 (BIOS A10) has the same bug, and a separate fix is in progress.
+The Alienware M17x R2 (BIOS A10) has the same bug; a separate fix, also tested on hardware, is in progress.
 
 ## License
 
