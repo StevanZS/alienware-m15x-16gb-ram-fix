@@ -1,0 +1,11 @@
+# Firmware binaries are Dell/Phoenix copyrighted: never commit them (patched builds go to Releases)
+*.iso
+*.A09
+*.bin
+*.zip
+M15x-BIOS/
+M17x-BIOS/
+out/
+.DS_Store
+__pycache__/
+venv/
